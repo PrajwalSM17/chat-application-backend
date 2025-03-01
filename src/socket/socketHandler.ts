@@ -42,7 +42,6 @@ export default (io: SocketIOServer): void => {
       
       socket.emit('onlineUsers', onlineUsers);
     });
-  });
     
     // Handle status change
     socket.on('statusChange', ({ userId, status }: StatusChangePayload) => {
@@ -126,3 +125,5 @@ export default (io: SocketIOServer): void => {
         io.emit('userStatusChanged', { userId: disconnectedUserId, status: 'Offline' });
       }
     });
+  });
+};
