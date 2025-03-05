@@ -6,25 +6,25 @@ import { User, UserRegistrationData, UserStatus, UserWithoutPassword } from '../
 let users: User[] = [
   {
     id: "1",
-    username: "john_doe",
-    email: "john@example.com",
-    password: "$2a$10$XveVlxESCNlXa4nQ9wosD.QRtrcz7J3vJwrR4wJ19kfg9MZXAr8N2", // hashed "password123"
+    username: "Bharathh",
+    email: "bharath@example.com",
+    password: "$2a$10$XveVlxESCNlXa4nQ9wosD.QRtrcz7J3vJwrR4wJ19kfg9MZXAr8N2",
     status: "Offline",
     createdAt: "2023-01-01T00:00:00.000Z"
   },
   {
     id: "2",
-    username: "jane_smith",
-    email: "jane@example.com",
-    password: "$2a$10$XveVlxESCNlXa4nQ9wosD.QRtrcz7J3vJwrR4wJ19kfg9MZXAr8N2", // hashed "password123"
+    username: "vignesh",
+    email: "vignesh@example.com",
+    password: "$2a$10$XveVlxESCNlXa4nQ9wosD.QRtrcz7J3vJwrR4wJ19kfg9MZXAr8N2", 
     status: "Offline",
     createdAt: "2023-01-02T00:00:00.000Z"
   },
   {
     id: "3",
-    username: "mike_johnson",
-    email: "mike@example.com",
-    password: "$2a$10$XveVlxESCNlXa4nQ9wosD.QRtrcz7J3vJwrR4wJ19kfg9MZXAr8N2", // hashed "password123"
+    username: "jitin",
+    email: "jitin@example.com",
+    password: "$2a$10$XveVlxESCNlXa4nQ9wosD.QRtrcz7J3vJwrR4wJ19kfg9MZXAr8N2",
     status: "Offline",
     createdAt: "2023-01-03T00:00:00.000Z"
   }

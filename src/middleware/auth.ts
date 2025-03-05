@@ -2,9 +2,13 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { DecodedUser } from '../types';
+import dotenv from 'dotenv';
 
-// JWT secret key (in production, store this in environment variables)
-const JWT_SECRET = 'your-secret-key';
+// Load environment variables
+dotenv.config();
+
+// JWT secret key from environment variables
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 // Extend Express Request interface to include user property
 declare global {

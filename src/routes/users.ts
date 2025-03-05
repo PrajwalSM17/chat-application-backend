@@ -2,15 +2,15 @@
 import express, { Request, Response } from 'express';
 import { verifyToken } from '../middleware/auth';
 import { UserStatus } from '../types';
-import { getAllUsers, getUserById, updateUserStatus } from '../data/users';
-import { getUserConversations } from '../data/messages';
+import { getAllUsers, getUserById, updateUserStatus } from '../services/userService';
+import { getUserConversations } from '../services/messageService';
 
 const router = express.Router();
 
 // Get all users (protected route)
-router.get('/', verifyToken, (req: Request, res: Response) => {
+router.get('/', verifyToken, async (req: Request, res: Response) => {
   try {
-    const users = getAllUsers();
+    const users = await getAllUsers();
     res.json(users);
   } catch (error) {
     console.error('Error fetching users:', error);
@@ -19,7 +19,7 @@ router.get('/', verifyToken, (req: Request, res: Response) => {
 });
 
 // Get current user (protected route)
-router.get('/me', verifyToken, (req: Request, res: Response) => {
+router.get('/me', verifyToken, async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
     
@@ -27,7 +27,7 @@ router.get('/me', verifyToken, (req: Request, res: Response) => {
       return res.status(401).json({ message: 'User not authenticated' });
     }
     
-    const user = getUserById(userId);
+    const user = await getUserById(userId);
     
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -41,10 +41,10 @@ router.get('/me', verifyToken, (req: Request, res: Response) => {
 });
 
 // Get user by ID (protected route)
-router.get('/:id', verifyToken, (req: Request, res: Response) => {
+router.get('/:id', verifyToken, async (req: Request, res: Response) => {
   try {
     const userId = req.params.id;
-    const user = getUserById(userId);
+    const user = await getUserById(userId);
     
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -58,7 +58,7 @@ router.get('/:id', verifyToken, (req: Request, res: Response) => {
 });
 
 // Update user status (protected route)
-router.patch('/:id/status', verifyToken, (req: Request, res: Response) => {
+router.patch('/:id/status', verifyToken, async (req: Request, res: Response) => {
   try {
     const { status } = req.body as { status: UserStatus };
     const userId = req.params.id;
@@ -74,7 +74,7 @@ router.patch('/:id/status', verifyToken, (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Invalid status' });
     }
     
-    const success = updateUserStatus(userId, status);
+    const success = await updateUserStatus(userId, status);
     
     if (!success) {
       return res.status(404).json({ message: 'User not found' });
@@ -88,7 +88,7 @@ router.patch('/:id/status', verifyToken, (req: Request, res: Response) => {
 });
 
 // Get user's conversations (protected route)
-router.get('/:id/conversations', verifyToken, (req: Request, res: Response) => {
+router.get('/:id/conversations', verifyToken, async (req: Request, res: Response) => {
   try {
     const userId = req.params.id;
     
@@ -97,12 +97,15 @@ router.get('/:id/conversations', verifyToken, (req: Request, res: Response) => {
       return res.status(403).json({ message: 'Unauthorized' });
     }
     
-    const conversationUserIds = getUserConversations(userId);
-    const conversations = conversationUserIds
-      .map(id => getUserById(id))
-      .filter(user => user !== null);
+    const conversationUserIds = await getUserConversations(userId);
+    const conversations = await Promise.all(
+      conversationUserIds.map(id => getUserById(id))
+    );
     
-    res.json(conversations);
+    // Filter out any null values
+    const validConversations = conversations.filter(user => user !== null);
+    
+    res.json(validConversations);
   } catch (error) {
     console.error('Error fetching conversations:', error);
     res.status(500).json({ message: 'Server error' });

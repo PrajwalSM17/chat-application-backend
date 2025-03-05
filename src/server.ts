@@ -5,6 +5,7 @@ import { Server as SocketIOServer } from 'socket.io';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 
+import { initializeDatabase } from './config/dbInit';
 import authRoutes from './routes/auth';
 import userRoutes from './routes/users';
 import messageRoutes from './routes/messages';
@@ -16,7 +17,7 @@ const server = http.createServer(app);
 const io = new SocketIOServer(server, {
   cors: {
     origin: "http://localhost:3000", // Your React frontend URL
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true
   }
 });
@@ -42,8 +43,14 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   res.status(500).send({ message: 'Something went wrong!', error: err.message });
 });
 
-// Start server
+// Initialize database and start server
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+
+// Initialize database and then start server
+initializeDatabase().then(() => {
+  server.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}).catch((err: any) => {
+  console.error('Failed to start server:', err);
 });

@@ -1,7 +1,7 @@
 // Socket handler for WebSocket connections
 import { Server as SocketIOServer, Socket } from 'socket.io';
-import { getUserById, updateUserStatus } from '../data/users';
-import { addMessage, getMessagesForUsers } from '../data/messages';
+import { getUserById, updateUserStatus } from '../services/userService';
+import { addMessage, getMessagesForUsers } from '../services/messageService';
 import { 
   ConversationPayload, 
   PrivateMessagePayload, 
@@ -19,14 +19,14 @@ export default (io: SocketIOServer): void => {
     console.log('New client connected:', socket.id);
     
     // Handle user login
-    socket.on('login', (userId: string) => {
+    socket.on('login', async (userId: string) => {
       console.log(`User ${userId} logged in`);
       
       // Store socket ID with user ID
       connectedUsers.set(userId, socket.id);
       
       // Update user status to "Available"
-      updateUserStatus(userId, 'Available');
+      await updateUserStatus(userId, 'Available');
       
       // Broadcast to all users that this user is now online
       io.emit('userStatusChanged', { userId, status: 'Available' });
@@ -34,7 +34,7 @@ export default (io: SocketIOServer): void => {
       // Send list of online users to the just connected user
       const onlineUsers: UserWithoutPassword[] = [];
       for (const [id, _] of connectedUsers) {
-        const user = getUserById(id);
+        const user = await getUserById(id);
         if (user) {
           onlineUsers.push(user);
         }
@@ -44,23 +44,24 @@ export default (io: SocketIOServer): void => {
     });
     
     // Handle status change
-    socket.on('statusChange', ({ userId, status }: StatusChangePayload) => {
-      updateUserStatus(userId, status);
+    socket.on('statusChange', async ({ userId, status }: StatusChangePayload) => {
+      await updateUserStatus(userId, status);
       io.emit('userStatusChanged', { userId, status });
     });
     
     // Handle private message
-    socket.on('privateMessage', ({ senderId, receiverId, message }: PrivateMessagePayload) => {
+    socket.on('privateMessage', async ({ senderId, receiverId, message }: PrivateMessagePayload) => {
       console.log(`Private message from ${senderId} to ${receiverId}: ${message}`);
       
-      // Save message to "database"
-      const newMessage = addMessage({
+      // Save message to database
+      const newMessage = await addMessage({
         senderId,
         receiverId,
         content: message,
         timestamp: new Date().toISOString(),
         isReply: false,
-        replyToId: null
+        replyToId: null,
+        read: false,
       });
       
       // Send to receiver if online
@@ -74,15 +75,16 @@ export default (io: SocketIOServer): void => {
     });
     
     // Handle message reply
-    socket.on('replyMessage', ({ senderId, receiverId, message, replyToId }: ReplyMessagePayload) => {
-      // Save reply to "database"
-      const newReply = addMessage({
+    socket.on('replyMessage', async ({ senderId, receiverId, message, replyToId }: ReplyMessagePayload) => {
+      // Save reply to database
+      const newReply = await addMessage({
         senderId,
         receiverId,
         content: message,
         timestamp: new Date().toISOString(),
         isReply: true,
-        replyToId
+        replyToId,
+        read: false,
       });
       
       // Send to receiver if online
@@ -96,13 +98,13 @@ export default (io: SocketIOServer): void => {
     });
     
     // Handle get conversation history
-    socket.on('getConversation', ({ userId, otherUserId }: ConversationPayload) => {
-      const messages = getMessagesForUsers(userId, otherUserId);
+    socket.on('getConversation', async ({ userId, otherUserId }: ConversationPayload) => {
+      const messages = await getMessagesForUsers(userId, otherUserId);
       socket.emit('conversationHistory', { userId: otherUserId, messages });
     });
     
     // Handle disconnection
-    socket.on('disconnect', () => {
+    socket.on('disconnect', async () => {
       console.log('Client disconnected:', socket.id);
       
       // Find the user ID associated with this socket
@@ -119,7 +121,7 @@ export default (io: SocketIOServer): void => {
         connectedUsers.delete(disconnectedUserId);
         
         // Update status to offline
-        updateUserStatus(disconnectedUserId, 'Offline');
+        await updateUserStatus(disconnectedUserId, 'Offline');
         
         // Notify other users
         io.emit('userStatusChanged', { userId: disconnectedUserId, status: 'Offline' });

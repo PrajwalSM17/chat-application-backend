@@ -3,15 +3,19 @@ import express, { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { LoginCredentials, UserRegistrationData } from '../types';
-import { getUserByEmail, getUserByUsername, createUser } from '../data/users';
+import { getUserByEmail, getUserByUsername, createUser } from '../services/userService';
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
 
 const router = express.Router();
 
-// JWT secret key (in production, store this in environment variables)
-const JWT_SECRET = 'your-secret-key';
+// JWT secret key from environment variables
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 // Register a new user
-router.post('/register', (req: Request, res: Response) => {
+router.post('/register', async (req: Request, res: Response) => {
   try {
     const { username, email, password } = req.body as UserRegistrationData;
     
@@ -21,16 +25,18 @@ router.post('/register', (req: Request, res: Response) => {
     }
     
     // Check if user already exists
-    if (getUserByEmail(email)) {
+    const existingEmail = await getUserByEmail(email);
+    if (existingEmail) {
       return res.status(400).json({ message: 'Email already in use' });
     }
     
-    if (getUserByUsername(username)) {
+    const existingUsername = await getUserByUsername(username);
+    if (existingUsername) {
       return res.status(400).json({ message: 'Username already taken' });
     }
     
     // Create new user
-    const newUser = createUser({ username, email, password });
+    const newUser = await createUser({ username, email, password });
     
     // Generate JWT token
     const token = jwt.sign(
@@ -52,7 +58,7 @@ router.post('/register', (req: Request, res: Response) => {
 });
 
 // Login user
-router.post('/login', (req: Request, res: Response) => {
+router.post('/login', async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body as LoginCredentials;
     
@@ -62,7 +68,7 @@ router.post('/login', (req: Request, res: Response) => {
     }
     
     // Find user
-    const user = getUserByEmail(email);
+    const user = await getUserByEmail(email);
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
