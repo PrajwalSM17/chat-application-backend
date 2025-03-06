@@ -45,9 +45,11 @@ export interface User {
     timestamp: string;
     isReply: boolean;
     replyToId: string | null;
+    read: boolean;
   }
   
   export interface MessageData {
+    read: boolean;
     senderId: string;
     receiverId: string;
     content: string;

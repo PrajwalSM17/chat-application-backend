@@ -1,130 +1,145 @@
-// Socket handler for WebSocket connections
-import { Server as SocketIOServer, Socket } from 'socket.io';
-import { getUserById, updateUserStatus } from '../services/userService';
-import { addMessage, getMessagesForUsers } from '../services/messageService';
-import { 
-  ConversationPayload, 
-  PrivateMessagePayload, 
-  ReplyMessagePayload, 
-  StatusChangePayload,
-  UserStatus,
-  UserWithoutPassword
-} from '../types';
+// Updated socketHandler.ts for the backend
+import { Server as SocketIOServer, Socket } from "socket.io";
+import { getUserById, updateUserStatus } from "../services/userService";
+import { addMessage, getMessagesForUsers } from "../services/messageService";
+import { UserStatus } from "../types";
 
 // To track connected users and their socket IDs
 const connectedUsers = new Map<string, string>();
 
 export default (io: SocketIOServer): void => {
-  io.on('connection', (socket: Socket) => {
-    console.log('New client connected:', socket.id);
-    
-    // Handle user login
-    socket.on('login', async (userId: string) => {
-      console.log(`User ${userId} logged in`);
-      
-      // Store socket ID with user ID
-      connectedUsers.set(userId, socket.id);
-      
-      // Update user status to "Available"
-      await updateUserStatus(userId, 'Available');
-      
-      // Broadcast to all users that this user is now online
-      io.emit('userStatusChanged', { userId, status: 'Available' });
-      
-      // Send list of online users to the just connected user
-      const onlineUsers: UserWithoutPassword[] = [];
-      for (const [id, _] of connectedUsers) {
-        const user = await getUserById(id);
-        if (user) {
-          onlineUsers.push(user);
+  io.on("connection", (socket: Socket) => {
+    console.log("New client connected:", socket.id);
+
+    // Extract user ID from auth token
+    const token = socket.handshake.auth.token;
+    // You would need to implement jwt verification to get the user ID
+    // For now, let's assume we have userId from the token
+    let userId: string | null = null;
+
+    try {
+      // Extract userId from token
+      // userId = verifyToken(token).id;
+      // For testing, you could use a middleware to attach userId
+      userId = socket.handshake.auth.userId;
+
+      if (userId) {
+        console.log(`User ${userId} connected via socket ${socket.id}`);
+        connectedUsers.set(userId, socket.id);
+
+        // Automatically update status to Available
+        updateUserStatus(userId, "Available")
+          .then(() => {
+            // Broadcast to all users
+            io.emit("status-update", { userId, status: "Available" });
+            console.log(
+              `Updated and broadcast status for ${userId} to Available`
+            );
+          })
+          .catch((err) =>
+            console.error("Error updating status on connect:", err)
+          );
+      }
+    } catch (error) {
+      console.error("Error extracting user ID from token:", error);
+    }
+
+    // Handle send-message event from frontend
+    socket.on("send-message", async (messageData) => {
+      console.log("Received message:", messageData);
+      if (!userId) {
+        console.error("No authenticated user ID for message");
+        return;
+      }
+
+      // In your socket handler
+      try {
+        // Add sender ID from authenticated user
+        const newMessage = await addMessage({
+          senderId: userId,
+          receiverId: messageData.receiverId,
+          content: messageData.content,
+          timestamp: new Date().toISOString(),
+          isReply: !!messageData.replyTo,
+          replyToId: messageData.replyTo || null,
+          read:messageData.read || false
+        });
+
+        console.log("Saved message to database:", newMessage);
+
+        // Check if newMessage is defined before proceeding
+        if (newMessage) {
+          // Transform to format expected by frontend
+          const messageToSend = {
+            id: newMessage.id,
+            senderId: newMessage.senderId,
+            receiverId: newMessage.receiverId,
+            content: newMessage.content,
+            timestamp: newMessage.createdAt,
+            isRead: newMessage.read,
+            replyTo: newMessage.replyToId,
+          };
+
+          // Send to receiver if online
+          const receiverSocketId = connectedUsers.get(messageData.receiverId);
+          console.log(
+            `Receiver  socket ID: ${receiverSocketId} ${connectedUsers} $` )
+          if (receiverSocketId) {
+            console.log(
+              `Sending message to receiver ${messageData.receiverId}`
+            );
+            io.to(receiverSocketId).emit("message", messageToSend);
+          }
+
+          // Also confirm to sender
+          socket.emit("message-sent", messageToSend);
+        } else {
+          console.error("Failed to create message: newMessage is undefined");
+          socket.emit("message-error", { error: "Failed to save message" });
         }
+      } catch (error) {
+        console.error("Error saving/sending message:", error);
+        socket.emit("message-error", { error: "Failed to send message" });
       }
-      
-      socket.emit('onlineUsers', onlineUsers);
     });
-    
-    // Handle status change
-    socket.on('statusChange', async ({ userId, status }: StatusChangePayload) => {
-      await updateUserStatus(userId, status);
-      io.emit('userStatusChanged', { userId, status });
-    });
-    
-    // Handle private message
-    socket.on('privateMessage', async ({ senderId, receiverId, message }: PrivateMessagePayload) => {
-      console.log(`Private message from ${senderId} to ${receiverId}: ${message}`);
-      
-      // Save message to database
-      const newMessage = await addMessage({
-        senderId,
-        receiverId,
-        content: message,
-        timestamp: new Date().toISOString(),
-        isReply: false,
-        replyToId: null,
-        read: false,
-      });
-      
-      // Send to receiver if online
-      const receiverSocketId = connectedUsers.get(receiverId);
-      if (receiverSocketId) {
-        io.to(receiverSocketId).emit('newMessage', newMessage);
+
+    // Handle status updates
+    socket.on("update-status", async ({ status }) => {
+      console.log(`Status update request from ${userId} to ${status}`);
+      if (!userId) {
+        console.error("No authenticated user ID for status update");
+        return;
       }
-      
-      // Also send back to sender to confirm delivery
-      socket.emit('messageSent', newMessage);
-    });
-    
-    // Handle message reply
-    socket.on('replyMessage', async ({ senderId, receiverId, message, replyToId }: ReplyMessagePayload) => {
-      // Save reply to database
-      const newReply = await addMessage({
-        senderId,
-        receiverId,
-        content: message,
-        timestamp: new Date().toISOString(),
-        isReply: true,
-        replyToId,
-        read: false,
-      });
-      
-      // Send to receiver if online
-      const receiverSocketId = connectedUsers.get(receiverId);
-      if (receiverSocketId) {
-        io.to(receiverSocketId).emit('newMessage', newReply);
+
+      try {
+        const success = await updateUserStatus(userId, status as UserStatus);
+        if (success) {
+          // Broadcast to all users
+          io.emit("status-update", { userId, status });
+          console.log(`Broadcast status update: ${userId} -> ${status}`);
+        }
+      } catch (error) {
+        console.error("Error updating status:", error);
       }
-      
-      // Also send back to sender
-      socket.emit('messageSent', newReply);
     });
-    
-    // Handle get conversation history
-    socket.on('getConversation', async ({ userId, otherUserId }: ConversationPayload) => {
-      const messages = await getMessagesForUsers(userId, otherUserId);
-      socket.emit('conversationHistory', { userId: otherUserId, messages });
-    });
-    
+
     // Handle disconnection
-    socket.on('disconnect', async () => {
-      console.log('Client disconnected:', socket.id);
-      
-      // Find the user ID associated with this socket
-      let disconnectedUserId: string | null = null;
-      for (const [userId, socketId] of connectedUsers.entries()) {
-        if (socketId === socket.id) {
-          disconnectedUserId = userId;
-          break;
-        }
-      }
-      
-      if (disconnectedUserId) {
+    socket.on("disconnect", () => {
+      console.log("Client disconnected:", socket.id);
+
+      if (userId) {
         // Remove from connected users
-        connectedUsers.delete(disconnectedUserId);
-        
+        connectedUsers.delete(userId);
+
         // Update status to offline
-        await updateUserStatus(disconnectedUserId, 'Offline');
-        
-        // Notify other users
-        io.emit('userStatusChanged', { userId: disconnectedUserId, status: 'Offline' });
+        updateUserStatus(userId, "Offline")
+          .then(() => {
+            // Notify other users
+            io.emit("status-update", { userId, status: "Offline" });
+          })
+          .catch((err) =>
+            console.error("Error updating status on disconnect:", err)
+          );
       }
     });
   });
