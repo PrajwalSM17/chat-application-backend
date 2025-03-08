@@ -10,15 +10,7 @@ const DB_USER = process.env.DB_USER || 'chat_user';
 const DB_PASSWORD = process.env.DB_PASSWORD || 'chat_password';
 const DB_HOST = process.env.DB_HOST || 'localhost';
 const DB_PORT = parseInt(process.env.DB_PORT || '3306', 10);
-// Add this after your dotenv.config() call
-console.log({
-    DB_NAME: process.env.DB_NAME,
-    DB_USER: process.env.DB_USER,
-    DB_PASSWORD: process.env.DB_PASSWORD,
-    DB_HOST: process.env.DB_HOST,
-    DB_PORT: process.env.DB_PORT
-  });
-// Create a new Sequelize instance
+
 const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASSWORD, {
   host: DB_HOST,
   port: DB_PORT,

@@ -1,4 +1,3 @@
-// Script to test database connection
 import { testConnection } from '../config/database';
 
 // Test the database connection

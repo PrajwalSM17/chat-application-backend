@@ -93,7 +93,7 @@ This is the backend for a real-time chat application implemented with Node.js, E
 
 1. Clone the repository:
    ```
-   git clone https://github.com/yourusername/chat-app-backend.git
+   git clone https://github.com/prajwalsm17/chat-app-backend.git
    cd chat-app-backend
    ```
 
@@ -157,27 +157,3 @@ The first time you run the server, it will:
 - `messageSent` - Confirms message delivery
 - `conversationHistory` - Sends conversation history
 
-## Next Steps
-
-1. **Dockerization**
-   - Create Dockerfile for containerization
-   - Set up Docker Compose for multi-container deployment (Node.js + MySQL)
-   - Configure environment variables for different deployment environments
-
-2. **Testing**
-   - Implement unit tests and integration tests
-   - Set up CI/CD pipeline
-
-3. **Performance Improvements**
-   - Add caching for frequently accessed data
-   - Optimize database queries
-   - Implement connection pooling
-
-4. **Security Enhancements**
-   - Add rate limiting
-   - Implement CSRF protection
-   - Enhanced input validation and sanitization
-
-## License
-
-This project is licensed under the MIT License.

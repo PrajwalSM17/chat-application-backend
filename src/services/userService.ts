@@ -52,12 +52,6 @@ export const createUser = async (userData: UserRegistrationData) => {
   const userObj = newUser.get({ plain: true });
   const { password, ...userWithoutPassword } = userObj;
   return userWithoutPassword;
-
-  // logic that should be in the service 
-//   const userObj = newUser.get({ plain: true });
-//   delete userObj.password;
-  
-//   return userObj;
   
 };
 

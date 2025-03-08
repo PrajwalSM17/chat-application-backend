@@ -6,37 +6,41 @@ let messages: Message[] = [
     id: "1",
     senderId: "1",
     receiverId: "2",
-    content: "Hey Jane, how are you?",
+    content: "Hey Hanumanth, how are you?",
     timestamp: "2023-01-10T09:30:00.000Z",
     isReply: false,
-    replyToId: null
+    replyToId: null,
+    read: false
   },
   {
     id: "2",
     senderId: "2",
     receiverId: "1",
-    content: "Hi John! I'm good, thanks for asking!",
+    content: "Hi Bharath! I'm good, thanks for asking!",
     timestamp: "2023-01-10T09:32:00.000Z",
     isReply: false,
-    replyToId: null
+    replyToId: null,
+    read: false
   },
   {
     id: "3",
     senderId: "3",
     receiverId: "1",
-    content: "John, do you have time for a meeting today?",
+    content: "Arvind, do you have time for a meeting today?",
     timestamp: "2023-01-10T10:00:00.000Z",
     isReply: false,
-    replyToId: null
+    replyToId: null,
+    read: false
   },
   {
     id: "4",
     senderId: "1",
     receiverId: "3",
-    content: "Sure Mike, how about 2 PM?",
+    content: "Sure Bhartah, how about 2 PM?",
     timestamp: "2023-01-10T10:05:00.000Z",
     isReply: true,
-    replyToId: "3"
+    replyToId: "3",
+    read: false
   }
 ];
 
