@@ -2,27 +2,21 @@ import sequelize, { testConnection } from './database';
 import bcrypt from 'bcryptjs';
 import { User, Message } from '../models';
 
-// Function to initialize database
 export const initializeDatabase = async (): Promise<void> => {
   try {
-    // Test connection
     await testConnection();
     
-    // Sync all models with database
     await sequelize.sync({ force: false, alter: true });
     console.log('Database synced successfully.');
     
-    // Check if any users exist, if not create sample users
     const userCount = await User.count();
     
     if (userCount === 0) {
       console.log('Creating sample users...');
       
-      // Hash password
       const salt = bcrypt.genSaltSync(10);
       const hashedPassword = bcrypt.hashSync('password123', salt);
       
-      // Create sample users
       const bharath = await User.create({
         username: 'Bharath',
         email: 'bharth@simpleuser.com',
@@ -46,7 +40,6 @@ export const initializeDatabase = async (): Promise<void> => {
       
       console.log('Sample users created.');
       
-      // Create sample messages
       console.log('Creating sample messages...');
       
       await Message.create({

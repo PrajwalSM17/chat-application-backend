@@ -1,4 +1,3 @@
-// User routes
 import express, { Request, Response } from 'express';
 import { verifyToken } from '../middleware/auth';
 import { UserStatus } from '../types';
@@ -7,7 +6,6 @@ import { getUserConversations } from '../services/messageService';
 
 const router = express.Router();
 
-// Get all users (protected route)
 router.get('/', verifyToken, async (req: Request, res: Response) => {
   try {
     const users = await getAllUsers();
@@ -18,7 +16,6 @@ router.get('/', verifyToken, async (req: Request, res: Response) => {
   }
 });
 
-// Get current user (protected route)
 router.get('/me', verifyToken, async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
@@ -40,7 +37,6 @@ router.get('/me', verifyToken, async (req: Request, res: Response) => {
   }
 });
 
-// Get user by ID (protected route)
 router.get('/:id', verifyToken, async (req: Request, res: Response) => {
   try {
     const userId = req.params.id;
@@ -57,18 +53,15 @@ router.get('/:id', verifyToken, async (req: Request, res: Response) => {
   }
 });
 
-// Update user status (protected route)
 router.patch('/:id/status', verifyToken, async (req: Request, res: Response) => {
   try {
     const { status } = req.body as { status: UserStatus };
     const userId = req.params.id;
     
-    // Verify user is updating their own status
     if (userId !== req.user?.id) {
       return res.status(403).json({ message: 'Unauthorized' });
     }
     
-    // Validate status
     const validStatuses: UserStatus[] = ['Available', 'Busy', 'Away', 'Offline'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ message: 'Invalid status' });
@@ -87,12 +80,10 @@ router.patch('/:id/status', verifyToken, async (req: Request, res: Response) => 
   }
 });
 
-// Get user's conversations (protected route)
 router.get('/:id/conversations', verifyToken, async (req: Request, res: Response) => {
   try {
     const userId = req.params.id;
     
-    // Verify user is accessing their own conversations
     if (userId !== req.user?.id) {
       return res.status(403).json({ message: 'Unauthorized' });
     }
@@ -102,7 +93,6 @@ router.get('/:id/conversations', verifyToken, async (req: Request, res: Response
       conversationUserIds.map(id => getUserById(id))
     );
     
-    // Filter out any null values
     const validConversations = conversations.filter(user => user !== null);
     
     res.json(validConversations);

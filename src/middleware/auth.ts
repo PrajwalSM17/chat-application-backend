@@ -1,16 +1,12 @@
-// Authentication middleware
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { DecodedUser } from '../types';
 import dotenv from 'dotenv';
 
-// Load environment variables
 dotenv.config();
 
-// JWT secret key from environment variables
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
-// Extend Express Request interface to include user property
 declare global {
   namespace Express {
     interface Request {
@@ -19,7 +15,6 @@ declare global {
   }
 }
 
-// Verify JWT token middleware
 export const verifyToken = (req: Request, res: Response, next: NextFunction): void => {
   const authHeader = req.headers.authorization;
   const token = authHeader?.split(' ')[1];

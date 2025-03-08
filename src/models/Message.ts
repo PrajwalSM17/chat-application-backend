@@ -2,7 +2,6 @@ import { Model, DataTypes, Optional } from 'sequelize';
 import sequelize from '../config/database';
 import User from './Users';
 
-// Attributes Interface
 interface MessageAttributes {
   id: string;
   senderId: string;
@@ -15,10 +14,8 @@ interface MessageAttributes {
   updatedAt: Date;
 }
 
-// Creation Attributes Interface - optional fields for creation
 interface MessageCreationAttributes extends Optional<MessageAttributes, 'id' | 'createdAt' | 'updatedAt'> {}
 
-// Message Model
 class Message extends Model<MessageAttributes, MessageCreationAttributes> {
   public id!: string;
   public senderId!: string;
@@ -28,7 +25,6 @@ class Message extends Model<MessageAttributes, MessageCreationAttributes> {
   public read!: boolean;
   public replyToId!: string | null;
   
-  // Timestamps
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
@@ -96,7 +92,6 @@ Message.init(
   }
 );
 
-// Associations
 Message.belongsTo(User, { foreignKey: 'senderId', as: 'sender' });
 Message.belongsTo(User, { foreignKey: 'receiverId', as: 'receiver' });
 Message.belongsTo(Message, { foreignKey: 'replyToId', as: 'replyTo' });

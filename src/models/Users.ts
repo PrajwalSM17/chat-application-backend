@@ -2,7 +2,6 @@ import { Model, DataTypes, Optional } from 'sequelize';
 import sequelize from '../config/database';
 import { UserStatus } from '../types';
 
-// Attributes Interface
 interface UserAttributes {
   id: string;
   username: string;
@@ -13,10 +12,8 @@ interface UserAttributes {
   updatedAt: Date;
 }
 
-// Creation Attributes Interface - optional fields for creation
 interface UserCreationAttributes extends Optional<UserAttributes, 'id' | 'createdAt' | 'updatedAt' | 'status'> {}
 
-// User Model
 class User extends Model<UserAttributes, UserCreationAttributes> {
   public id!: string;
   public username!: string;
@@ -24,7 +21,6 @@ class User extends Model<UserAttributes, UserCreationAttributes> {
   public password!: string;
   public status!: UserStatus;
   
-  // Timestamps
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }

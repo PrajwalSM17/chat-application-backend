@@ -17,7 +17,7 @@ COPY . .
 RUN npm run build
 
 # Expose port 5000
-EXPOSE 3000
+EXPOSE 5000
 
 # Command to run the application
 CMD ["node", "dist/server"]

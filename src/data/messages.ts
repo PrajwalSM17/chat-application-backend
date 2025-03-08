@@ -1,4 +1,3 @@
-// Dummy data and functions for messages
 import { Message, MessageData } from '../types';
 
 let messages: Message[] = [
@@ -44,17 +43,14 @@ let messages: Message[] = [
   }
 ];
 
-// Get all messages
 export const getAllMessages = (): Message[] => {
   return [...messages];
 };
 
-// Get message by ID
 export const getMessageById = (id: string): Message | null => {
   return messages.find(message => message.id === id) || null;
 };
 
-// Get messages between two users
 export const getMessagesForUsers = (user1Id: string, user2Id: string): Message[] => {
   return messages.filter(message => 
     (message.senderId === user1Id && message.receiverId === user2Id) ||
@@ -62,7 +58,6 @@ export const getMessagesForUsers = (user1Id: string, user2Id: string): Message[]
   ).sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 };
 
-// Add a new message
 export const addMessage = (messageData: MessageData): Message => {
   const newMessage: Message = {
     id: (messages.length + 1).toString(),
@@ -73,9 +68,7 @@ export const addMessage = (messageData: MessageData): Message => {
   return newMessage;
 };
 
-// Get users with whom a user has conversations
 export const getUserConversations = (userId: string): string[] => {
-  // Find all unique users that the specified user has exchanged messages with
   const conversationUserIds = new Set<string>();
   
   messages.forEach(message => {

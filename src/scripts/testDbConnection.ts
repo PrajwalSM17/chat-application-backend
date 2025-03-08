@@ -1,6 +1,5 @@
 import { testConnection } from '../config/database';
 
-// Test the database connection
 const testDbConnection = async (): Promise<void> => {
   try {
     console.log('Testing database connection...');
@@ -12,5 +11,4 @@ const testDbConnection = async (): Promise<void> => {
   }
 };
 
-// Run the test
 testDbConnection();
