@@ -1,15 +1,12 @@
-// src/__tests__/socket/socketHandler.test.ts
 import socketHandler from '../../socket/socketHandler';
 import { getUserById, updateUserStatus } from '../../services/userService';
 import { addMessage, getMessagesForUsers, markMessagesAsRead } from '../../services/messageService';
 import jwt from 'jsonwebtoken';
 
-// Mock services
 jest.mock('../../services/userService');
 jest.mock('../../services/messageService');
 jest.mock('jsonwebtoken');
 
-// Create mock for Socket.IO
 const mockSocketInstance = {
   id: 'socket-id-123',
   data: {
@@ -35,7 +32,6 @@ const mockIo = {
   to: jest.fn(() => ({ emit: jest.fn() }))
 };
 
-// Mock connected users map (we need to access the internal map)
 const connectedUsers = new Map();
 (global as any).connectedUsers = connectedUsers;
 
@@ -62,7 +58,6 @@ describe('Socket Handler', () => {
   });
 
   it('should handle login event correctly', async () => {
-    // Mock implementations
     (updateUserStatus as jest.Mock).mockResolvedValue(true);
     (getUserById as jest.Mock).mockResolvedValue({
       id: 'user-id-123',
@@ -70,7 +65,6 @@ describe('Socket Handler', () => {
       status: 'Available'
     });
 
-    // Trigger login handler
     const loginHandler = jest.fn(async (userId: string) => {
       connectedUsers.set(userId, 'socket-id-123');
       await updateUserStatus(userId, 'Available');
@@ -79,7 +73,6 @@ describe('Socket Handler', () => {
 
     loginHandler('user-id-123');
 
-    // Verify behavior
     expect(updateUserStatus).toHaveBeenCalledWith('user-id-123', 'Available');
     expect(mockIo.emit).toHaveBeenCalledWith('status-update', {
       userId: 'user-id-123',
@@ -89,7 +82,6 @@ describe('Socket Handler', () => {
   });
 
   it('should handle sending messages', async () => {
-    // Mock implementations
     const mockMessage = {
       id: 'msg-123',
       senderId: 'user-id-123',
@@ -104,7 +96,6 @@ describe('Socket Handler', () => {
     (addMessage as jest.Mock).mockResolvedValue(mockMessage);
     connectedUsers.set('user-id-456', 'receiver-socket-id');
 
-    // Simulate handler logic
     const sendMessageHandler = jest.fn(async (messageData: any) => {
       const newMessage = await addMessage({
         senderId: 'user-id-123',
@@ -122,21 +113,17 @@ describe('Socket Handler', () => {
     //     mockIo.to(receiverSocketId).emit('message', newMessage);
     //   }
 
-      // Send confirmation to sender
       mockSocketInstance.emit('message-sent', newMessage);
     });
 
-    // Execute
     await sendMessageHandler({
       receiverId: 'user-id-456',
       content: 'Test message'
     });
 
-    // Verify behavior
     expect(addMessage).toHaveBeenCalled();
     expect(mockIo.to).toHaveBeenCalledWith('receiver-socket-id');
     expect(mockSocketInstance.emit).toHaveBeenCalledWith('message-sent', mockMessage);
   });
 
-  // Additional tests for other socket events...
 });

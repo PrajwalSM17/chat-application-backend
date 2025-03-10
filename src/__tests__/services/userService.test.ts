@@ -1,7 +1,6 @@
 import { getUserById, getAllUsers, updateUserStatus } from '../../services/userService';
 import  User  from '../../models/Users';
 
-// Mock the User model
 jest.mock('../../models/User', () => ({
   findByPk: jest.fn(),
   findAll: jest.fn(),
@@ -15,7 +14,6 @@ describe('User Service', () => {
 
   describe('getUserById', () => {
     it('should return a user without password when user exists', async () => {
-      // Mock data
       const mockUser = {
         id: '123',
         username: 'testuser',
@@ -35,13 +33,10 @@ describe('User Service', () => {
         })
       };
 
-      // Setup mock
       (User.findByPk as jest.Mock).mockResolvedValue(mockUser);
 
-      // Execute
       const result = await getUserById('123');
 
-      // Assert
       expect(User.findByPk).toHaveBeenCalledWith('123', {
         attributes: { exclude: ['password'] }
       });
@@ -52,13 +47,10 @@ describe('User Service', () => {
     });
 
     it('should return null when user does not exist', async () => {
-      // Setup mock
       (User.findByPk as jest.Mock).mockResolvedValue(null);
 
-      // Execute
       const result = await getUserById('nonexistent');
 
-      // Assert
       expect(User.findByPk).toHaveBeenCalledWith('nonexistent', {
         attributes: { exclude: ['password'] }
       });
@@ -68,7 +60,6 @@ describe('User Service', () => {
 
   describe('getAllUsers', () => {
     it('should return all users without passwords', async () => {
-      // Mock data
       const mockUsers = [
         {
           id: '123',
@@ -108,13 +99,10 @@ describe('User Service', () => {
         }
       ];
 
-      // Setup mock
       (User.findAll as jest.Mock).mockResolvedValue(mockUsers);
 
-      // Execute
       const result = await getAllUsers();
 
-      // Assert
       expect(User.findAll).toHaveBeenCalledWith({
         attributes: { exclude: ['password'] }
       });
@@ -128,13 +116,10 @@ describe('User Service', () => {
 
   describe('updateUserStatus', () => {
     it('should update user status and return true on success', async () => {
-      // Setup mock
       (User.update as jest.Mock).mockResolvedValue([1]);
 
-      // Execute
       const result = await updateUserStatus('123', 'Busy');
 
-      // Assert
       expect(User.update).toHaveBeenCalledWith(
         { status: 'Busy' },
         { where: { id: '123' } }
@@ -143,13 +128,10 @@ describe('User Service', () => {
     });
 
     it('should return false when user not found', async () => {
-      // Setup mock
       (User.update as jest.Mock).mockResolvedValue([0]);
 
-      // Execute
       const result = await updateUserStatus('nonexistent', 'Away');
 
-      // Assert
       expect(User.update).toHaveBeenCalledWith(
         { status: 'Away' },
         { where: { id: 'nonexistent' } }
@@ -158,13 +140,10 @@ describe('User Service', () => {
     });
 
     it('should handle errors and return false', async () => {
-      // Setup mock
       (User.update as jest.Mock).mockRejectedValue(new Error('Database error'));
 
-      // Execute
       const result = await updateUserStatus('123', 'Away');
 
-      // Assert
       expect(User.update).toHaveBeenCalled();
       expect(result).toBe(false);
     });

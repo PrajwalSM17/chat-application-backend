@@ -2,7 +2,6 @@ import { getMessageById, getMessagesForUsers, addMessage, markMessagesAsRead } f
 import Message  from '../../models/Message';
 import { Op } from 'sequelize';
 
-// Mock the Message model
 jest.mock('../../models/Message', () => ({
   findByPk: jest.fn(),
   findAll: jest.fn(),
@@ -17,7 +16,6 @@ describe('Message Service', () => {
 
   describe('getMessageById', () => {
     it('should return a message when it exists', async () => {
-      // Mock data
       const mockMessage = {
         id: 'msg1',
         senderId: 'user1',
@@ -43,13 +41,10 @@ describe('Message Service', () => {
         })
       };
 
-      // Setup mock
       (Message.findByPk as jest.Mock).mockResolvedValue(mockMessage);
 
-      // Execute
       const result = await getMessageById('msg1');
 
-      // Assert
       expect(Message.findByPk).toHaveBeenCalledWith('msg1', expect.any(Object));
       expect(result).toBeDefined();
       expect(result?.id).toBe('msg1');
@@ -57,13 +52,10 @@ describe('Message Service', () => {
     });
 
     it('should return null when message does not exist', async () => {
-      // Setup mock
       (Message.findByPk as jest.Mock).mockResolvedValue(null);
 
-      // Execute
       const result = await getMessageById('nonexistent');
 
-      // Assert
       expect(Message.findByPk).toHaveBeenCalledWith('nonexistent', expect.any(Object));
       expect(result).toBeNull();
     });
@@ -71,7 +63,6 @@ describe('Message Service', () => {
 
   describe('getMessagesForUsers', () => {
     it('should return messages between two users', async () => {
-      // Mock data
       const mockMessages = [
         {
           id: 'msg1',
@@ -119,13 +110,10 @@ describe('Message Service', () => {
         }
       ];
 
-      // Setup mock
       (Message.findAll as jest.Mock).mockResolvedValue(mockMessages);
 
-      // Execute
       const result = await getMessagesForUsers('user1', 'user2');
 
-      // Assert
       expect(Message.findAll).toHaveBeenCalledWith(expect.objectContaining({
         where: {
           [Op.or]: [
@@ -148,7 +136,6 @@ describe('Message Service', () => {
 
   describe('addMessage', () => {
     it('should create and return a new message', async () => {
-      // Mock data
       const messageData = {
         senderId: 'user1',
         receiverId: 'user2',
@@ -182,14 +169,11 @@ describe('Message Service', () => {
         })
       };
 
-      // Setup mocks
       (Message.create as jest.Mock).mockResolvedValue(mockCreatedMessage);
       (Message.findByPk as jest.Mock).mockResolvedValue(mockMessageWithAssociations);
 
-      // Execute
       const result = await addMessage(messageData);
 
-      // Assert
       expect(Message.create).toHaveBeenCalledWith(expect.objectContaining({
         senderId: 'user1',
         receiverId: 'user2',
@@ -208,13 +192,10 @@ describe('Message Service', () => {
 
   describe('markMessagesAsRead', () => {
     it('should mark messages as read and return true on success', async () => {
-      // Setup mock
       (Message.update as jest.Mock).mockResolvedValue([2]);
 
-      // Execute
       const result = await markMessagesAsRead('user1', 'user2');
 
-      // Assert
       expect(Message.update).toHaveBeenCalledWith(
         { read: true },
         {
@@ -229,25 +210,19 @@ describe('Message Service', () => {
     });
 
     it('should return false when no messages are updated', async () => {
-      // Setup mock
       (Message.update as jest.Mock).mockResolvedValue([0]);
 
-      // Execute
       const result = await markMessagesAsRead('user1', 'user2');
 
-      // Assert
       expect(Message.update).toHaveBeenCalled();
       expect(result).toBe(false);
     });
 
     it('should handle errors and return false', async () => {
-      // Setup mock
       (Message.update as jest.Mock).mockRejectedValue(new Error('Database error'));
 
-      // Execute
       const result = await markMessagesAsRead('user1', 'user2');
 
-      // Assert
       expect(Message.update).toHaveBeenCalled();
       expect(result).toBe(false);
     });
